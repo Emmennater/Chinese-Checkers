@@ -8,11 +8,22 @@ class Game {
 
   run() {
     this.board.actions();
+    Animator.update();
     this.board.draw();
     this.updateBot();
+    Animator.draw();
+  }
+
+  reset() {
+    this.board.init();
+    this.board.setup();
+    this.board.control.initAllReferences();
+    this.board.graphics.lastPath = null;
   }
   
   updateBot() {
+    if (Animator.busy) return;
+
     if (this.botdue == 0 || this.botdue == -10) {
       this.ai.bestMove(this.board);
     }
@@ -118,6 +129,8 @@ class Board {
   }
 
   clicked() {
+    if (Animator.busy) return;
+
     // Reset highlighted
     for (let rows of this.cols) {
       for (let hole of rows) {
@@ -457,19 +470,7 @@ class BoardBehavior {
   updateClick() {
     // Moving the ball
     if (this.canMoveTo(this.prevSelected, this.selected)) {
-      // Move selected ball
-      this.selected.ball = this.prevSelected.ball;
-      this.selected.ball.hole = this.selected;
-      this.prevSelected.ball = null;
-
-      this.prevSelected = null;
-      this.selected.selected = false;
-      this.selected = null;
-
-      clickSound.play();
-      
-      // Next turn
-      this.turn = (this.turn + 1) % this.board.teams;
+      this.playMove({from:this.prevSelected, to:this.selected});
       
       if (game.autobot) {
         game.botdue = 3;
@@ -485,10 +486,7 @@ class BoardBehavior {
     this.clearVisited();
     this.board.graphics.lastPath = path;
 
-    move.to.ball = move.from.ball;
-    move.to.ball.hole = move.to;
-    move.from.ball = null;
-    clickSound.play();
+    Animator.animatePath(path);
     
     this.board.control.turn = (this.board.control.turn + 1) % this.board.teams;
   }
@@ -593,13 +591,84 @@ class Ball {
   constructor(hole, team = 0) {
     this.hole = hole;
     this.team = team;
+    this.lerpx = null;
+    this.lerpy = null;
+    this.lerpt = 0;
+    this.animate = false;
   }
 
-  draw(x, y, s) {
+  draw(x, y, s, animate = false) {
+    
+    if (this.animate) {
+      let loc0 = this.hole.board.graphics.getLoc(this.hole.c, this.hole.r);
+      let loc1 = this.hole.board.graphics.getLoc(this.lerpx, this.lerpy);
+      x = lerp(loc0.x, loc1.x, this.lerpt);
+      y = lerp(loc0.y, loc1.y, this.lerpt);
+      s = loc0.s * (0.8 + Math.sin(this.lerpt * Math.PI) * 0.2);
+    }
+
     // fill(getTeamColor(this.team));
     // noStroke();
     // ellipse(x, y, s);
-    image(getTeamImage(this.team), x, y, s, s);
+    if (!this.animate || animate) {
+      image(getTeamImage(this.team), x, y, s, s);
+    }
+  }
+}
+
+class Animator {
+  static busy = false;
+  static speed = 0.05;
+  static path = null;
+  static t = 0;
+
+  static animatePath(path) {
+    this.t = 0;
+    this.path = path.slice();
+    this.busy = true;
+    // clickSound.play();
+  }
+
+  static update() {
+    if (this.busy < 0) this.busy++;
+
+    const path = this.path;
+    if (path == null) return;
+    path[0].ball.animate = true;
+
+    // Increment time
+    this.t += this.speed;
+    this.t = constrain(this.t, 0, 1);
+
+    if (this.t >= 1) {
+      path[0].ball.animate = false;
+      path[1].ball = path[0].ball;
+      path[1].ball.hole = path[1];
+      path[0].ball = null;
+      path.shift();
+      if (path.length <= 1) {
+        this.path = null;
+        this.busy = -1;
+        clickSound.amp(0.5);
+        clickSound.play();
+      } else {
+        clickSound.amp(0.15);
+        clickSound.play();
+        this.t = 0;
+      }
+    } else {
+      // Set ball location
+      path[0].ball.animate = true;
+      path[0].ball.lerpx = path[1].c;
+      path[0].ball.lerpy = path[1].r;
+      path[0].ball.lerpt = this.t;
+    }
+
+  }
+
+  static draw() {
+    if (this.path == null) return;
+    this.path[0].ball.draw(0, 0, 0, true);
   }
 }
 

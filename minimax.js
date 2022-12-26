@@ -43,7 +43,7 @@ class Minimax {
     //   targetHole.px, targetHole.py
     // );
     let d = Math.abs(targetHole.px - ball.hole.px);
-    d += Math.abs(targetHole.py / 2 - ball.hole.py / 2);
+    d += Math.abs(targetHole.py - ball.hole.py) / 2;
     
     // Set score relative to distance
     score = 16 - d;

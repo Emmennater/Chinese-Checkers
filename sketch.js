@@ -6,14 +6,16 @@ function preload() {
 }
 
 function setup() {
-  clickSound.amp(0.5);
   createCanvas(windowWidth, windowHeight);
+  data = {};
   whiteBall.width = 50;
   whiteBall.height = 50;
   blackBall.width = 50;
   blackBall.height = 50;
+  setupElements();
   game = new Game();
   game.autobot = true;
+  
   // background(40);
   // game.run();
 }

@@ -16,6 +16,14 @@ function keyPressed() {
   if (key == "a") {
     game.botdue = -10;
   }
+
+  if (key == "c") {
+    toggleSettings();
+  }
+
+  if (key == "r") {
+    game.reset();
+  }
   
   let num = parseFloat(key);
   if (!isNaN(num)) {

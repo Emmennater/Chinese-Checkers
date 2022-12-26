@@ -11,7 +11,15 @@
   <body>
     <main>
     </main>
+
+    <div id="settings" style="visibility: visible;">
+      <span class="heading">Press C to Toggle Settings</span>
+      <span id="animelabel">Animation Speed: 0.05</span>
+      <input id="animespeed" type="range", min="0.01", max="1" value="0.05" step="0.01" class="slider">
+    </div>
+
     <script src="actions.js"></script>
+    <script src="elements.js"></script>
     <script src="game.js"></script>
     <script src="minimax.js"></script>
     <script src="sketch.js"></script>
