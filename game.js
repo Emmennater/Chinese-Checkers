@@ -19,6 +19,10 @@ class Game {
     this.board.setup();
     this.board.control.initAllReferences();
     this.board.graphics.lastPath = null;
+    this.board.winner = null;
+    this.botdue = -1;
+    Animator.busy = false;
+    Animator.path = null;
   }
   
   updateBot() {
@@ -40,6 +44,7 @@ class Board {
     this.size = 13;
     this.cols = [];
     this.teams = 2;
+    this.winner = null;
     this.init();
     this.setup(this.teams);
     this.control = new BoardBehavior(this);
@@ -239,15 +244,25 @@ Depth: ${game.ai.maxDepth}
 Permutations: ${game.ai.permutations}
 `, 4, 4);
     
-    // Turn
+    // Turn / Win Text
+    let turnText = "WHITE";
     textAlign(CENTER, TOP);
     textSize(50);
-    let turnText = "WHITE";
     fill(255);
     stroke(0, 200);
     strokeWeight(5);
-    
-    if (this.board.control.turn == 0) {
+
+    if (this.board.winner != null) {
+      // Winner
+      let WINNER = "WHITE";
+      if (this.board.winner < 0) {
+        WINNER = "BLACK";
+        fill(0);
+        stroke(255, 200);
+      }
+      turnText = WINNER + " WINS!";
+    } else if (this.board.control.turn == 0) {
+      // Black turn
       turnText = "BLACK";
       fill(0);
       stroke(255, 200);
@@ -482,6 +497,7 @@ class BoardBehavior {
 
   playMove(move) {
     if (!move) return;
+    if (this.board.winner != null) return;
     let path = this.getMovesTo(move.from, [], false, [move.from], move.to);
     this.clearVisited();
     this.board.graphics.lastPath = path;
@@ -489,6 +505,10 @@ class BoardBehavior {
     Animator.animatePath(path);
     
     this.board.control.turn = (this.board.control.turn + 1) % this.board.teams;
+  }
+
+  checkForWin() {
+    this.board.winner = game.ai.getWinState(this.board);
   }
 }
 
@@ -605,6 +625,8 @@ class Ball {
       x = lerp(loc0.x, loc1.x, this.lerpt);
       y = lerp(loc0.y, loc1.y, this.lerpt);
       s = loc0.s * (0.8 + Math.sin(this.lerpt * Math.PI) * 0.2);
+    } else if (animate) {
+      return;
     }
 
     // fill(getTeamColor(this.team));
@@ -649,6 +671,7 @@ class Animator {
       if (path.length <= 1) {
         this.path = null;
         this.busy = -1;
+        game.board.control.checkForWin();
         clickSound.amp(0.5);
         clickSound.play();
       } else {
@@ -668,7 +691,8 @@ class Animator {
 
   static draw() {
     if (this.path == null) return;
-    this.path[0].ball.draw(0, 0, 0, true);
+    if (this.path)
+    this.path[0].ball.draw(null, null, null, true);
   }
 }
 
