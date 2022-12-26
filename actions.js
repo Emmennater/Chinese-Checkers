@@ -12,6 +12,10 @@ function keyPressed() {
   if (key == "b") {
     game.botdue = 3;
   }
+
+  if (key == "a") {
+    game.botdue = -10;
+  }
   
   let num = parseFloat(key);
   if (!isNaN(num)) {

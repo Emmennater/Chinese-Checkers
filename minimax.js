@@ -43,7 +43,7 @@ class Minimax {
     //   targetHole.px, targetHole.py
     // );
     let d = Math.abs(targetHole.px - ball.hole.px);
-    d += Math.abs(targetHole.py - ball.hole.py);
+    d += Math.abs(targetHole.py / 2 - ball.hole.py / 2);
     
     // Set score relative to distance
     score = 16 - d;
@@ -108,23 +108,9 @@ class Minimax {
     
     // All balls on winning side
     
-    // White win (all full and at least one white)
-    let whiteExists = false;
-    let full = true;
-    for (let i=0; i<4; i++) {
-      for (let hole of board.cols[i]) {
-        if (!hole.ball) {
-          full = false;
-          break;
-        } else {
-          if (hole.ball.team == 1) whiteExists = true;
-        }
-      }
-    }
-    if (full && whiteExists) return 1;
-    
+    // Black win
     let blackExists = false;
-    full = true;
+    let full = true;
     for (let i=13; i<17; i++) {
       for (let hole of board.cols[i]) {
         if (!hole.ball) {
@@ -136,6 +122,21 @@ class Minimax {
       }
     }
     if (full && blackExists) return -1;
+
+    // White win (all full and at least one white)
+    let whiteExists = false;
+    full = true;
+    for (let i=0; i<4; i++) {
+      for (let hole of board.cols[i]) {
+        if (!hole.ball) {
+          full = false;
+          break;
+        } else {
+          if (hole.ball.team == 1) whiteExists = true;
+        }
+      }
+    }
+    if (full && whiteExists) return 1;
     
     // let win = true;
     // for (let ball of board.teamBalls[0]) {

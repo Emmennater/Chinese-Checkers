@@ -13,7 +13,7 @@ class Game {
   }
   
   updateBot() {
-    if (this.botdue == 0) {
+    if (this.botdue == 0 || this.botdue == -10) {
       this.ai.bestMove(this.board);
     }
     
