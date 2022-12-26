@@ -1,6 +1,6 @@
 class Game {
   constructor() {
-    this.board = new Board();
+    this.board = new Board(this);
     this.ai = new Minimax(this.board);
     this.easyPlace = false;
     this.botdue = -1;
@@ -40,7 +40,8 @@ class Game {
 }
 
 class Board {
-  constructor() {
+  constructor(game) {
+    this.game = game;
     this.size = 13;
     this.cols = [];
     this.teams = 2;
@@ -171,6 +172,7 @@ class BoardGraphics {
     this.margin = 10;
     this.padding = 4;
     this.lastPath = null;
+    this.evalbar = new EvalBar(this.board.game);
     this.resize();
   }
 
@@ -244,6 +246,10 @@ Depth: ${game.ai.maxDepth}
 Permutations: ${game.ai.permutations}
 `, 4, 4);
     
+    // Eval bar
+    this.evalbar.update();
+    this.evalbar.draw();
+
     // Turn / Win Text
     let turnText = "WHITE";
     textAlign(CENTER, TOP);
@@ -693,6 +699,30 @@ class Animator {
     if (this.path == null) return;
     if (this.path)
     this.path[0].ball.draw(null, null, null, true);
+  }
+}
+
+class EvalBar {
+  constructor() {
+    this.eval = 0.0;
+    this.neweval = 0.5;
+  }
+
+  update() {
+    let score = game.ai.evaluation;
+    this.neweval = map(score, -60, 60, 0, 1);
+    this.neweval = constrain(this.neweval, 0, 1);
+  }
+
+  draw() {
+    this.eval = lerp(this.eval, this.neweval, 0.1);
+
+    fill(0, 50);
+    stroke(50, 200);
+    rect(14, height / 2 - height * 0.3, 18, height * 0.6);
+    noStroke();
+    fill(255, 100);
+    rect(14, height / 2 + height * 0.3, 18, -height * 0.6 * this.eval);
   }
 }
 
