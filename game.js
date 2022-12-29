@@ -1,3 +1,5 @@
+STOP = 0;
+
 class Game {
   constructor() {
     this.board = new Board(this);
@@ -7,11 +9,19 @@ class Game {
   }
 
   run() {
-    this.board.actions();
-    Animator.update();
-    this.board.draw();
-    this.updateBot();
-    Animator.draw();
+    switch (STOP) {
+      case 0:
+      this.board.actions();
+      case 1:
+      Animator.update();
+      case 2:
+      this.board.draw();
+      case 3:
+      this.updateBot();
+      case 4:
+      Animator.draw();
+      break;
+    }
   }
 
   reset() {
@@ -340,7 +350,7 @@ class BoardBehavior {
   
   getJumps(c, r) {
     const cols = this.board.cols;
-    const moves = Array(6);
+    const moves = []; //Array(6);
     const px = cols[c][r].px;
     const py = cols[c][r].py;
 
@@ -507,7 +517,7 @@ class BoardBehavior {
     let path = this.getMovesTo(move.from, [], false, [move.from], move.to);
     this.clearVisited();
     this.board.graphics.lastPath = path;
-
+    
     Animator.animatePath(path);
     
     this.board.control.turn = (this.board.control.turn + 1) % this.board.teams;
@@ -652,52 +662,84 @@ class Animator {
 
   static animatePath(path) {
     this.t = 0;
-    this.path = path.slice();
     this.busy = true;
+    this.path = path.slice();
     // clickSound.play();
   }
 
   static update() {
-    if (this.busy < 0) this.busy++;
+    if (this.path == null) return;
 
-    const path = this.path;
-    if (path == null) return;
-    path[0].ball.animate = true;
+    const currentHole = this.path[0];
+    const nextHole = this.path[1];
+
+    // Set ball to animate to next hole
+    currentHole.ball.animate = true;
 
     // Increment time
     this.t += this.speed;
     this.t = constrain(this.t, 0, 1);
 
+    // Done animating
     if (this.t >= 1) {
-      path[0].ball.animate = false;
-      path[1].ball = path[0].ball;
-      path[1].ball.hole = path[1];
-      path[0].ball = null;
-      path.shift();
-      if (path.length <= 1) {
-        this.path = null;
-        this.busy = -1;
-        game.board.control.checkForWin();
-        clickSound.amp(0.5);
-        clickSound.play();
-      } else {
-        clickSound.amp(0.15);
-        clickSound.play();
-        this.t = 0;
-      }
-    } else {
-      // Set ball location
-      path[0].ball.animate = true;
-      path[0].ball.lerpx = path[1].c;
-      path[0].ball.lerpy = path[1].r;
-      path[0].ball.lerpt = this.t;
+      return this.nextHole();
     }
 
+    // Animate ball
+    currentHole.ball.lerpx = nextHole.c;
+    currentHole.ball.lerpy = nextHole.r;
+    currentHole.ball.lerpt = this.t;
+  }
+
+  static nextHole() {
+
+    const currentHole = this.path[0];
+    const nextHole = this.path[1];
+
+    // Move the ball to the next hole
+    nextHole.ball = currentHole.ball;
+
+    // Set the hole to the new hole
+    nextHole.ball.hole = nextHole;
+
+    // Remove ball from previous hole
+    currentHole.ball = null;
+
+    // Remove the previous path
+    this.path.shift();
+    // this.path.length = 1;
+
+    // No more holes left
+    if (this.path.length == 1) {
+      // Delete the path
+      nextHole.ball.animate = false;
+      this.path.length = 0;
+      this.path = null;
+      this.busy = false;
+
+      // Check if move wins the game
+      game.board.control.checkForWin();
+      
+      // SOUNDS CAUSING HUGE MEMORY LEAK
+      // Play loud click
+      // clickSound.amp(0.5);
+      // clickSound.play();
+      // clickSound.stop(1);
+
+      return;
+    }
+
+    // Play quiet click
+    // clickSound.amp(0.15);
+    // clickSound.play();
+    // clickSound.stop(1);
+
+    // Set time back to 0
+    this.t = 0;
   }
 
   static draw() {
     if (this.path == null) return;
-    if (this.path)
     this.path[0].ball.draw(null, null, null, true);
   }
 }
@@ -709,7 +751,7 @@ class EvalBar {
   }
 
   update() {
-    let score = game.ai.evaluation;
+    let score = game.ai.evaluation * game.ai.maximizingTeam;
     this.neweval = map(score, -60, 60, 0, 1);
     this.neweval = constrain(this.neweval, 0, 1);
   }

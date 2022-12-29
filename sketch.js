@@ -22,9 +22,10 @@ function setup() {
 
 function draw() {
   cursor("default");
+  clear();
   // background(40);
-  imageMode(CORNER);
-  image(bgImg, 0, 0, width, height);
+  // imageMode(CORNER);
+  // image(bgImg, 0, 0, width, height);
   imageMode(CENTER);
   game.run();
 }

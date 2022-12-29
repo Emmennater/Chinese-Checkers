@@ -1,8 +1,11 @@
 html, body {
   margin: 0;
   padding: 0;
-  background-color: black;
+  /* background-color: black; */
+  background-image: url("https://images.pexels.com/photos/139306/pexels-photo-139306.jpeg?cs=srgb&dl=pexels-fwstudio-139306.jpg&fm=jpg");
+  background-size: cover;
 }
+
 canvas {
   display: block;
   top: 0px;
