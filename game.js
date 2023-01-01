@@ -6,6 +6,7 @@ class Game {
     this.ai = new Minimax(this.board);
     this.easyPlace = false;
     this.botdue = -1;
+    this.VERSION = "1.1";
   }
 
   run() {
@@ -251,7 +252,8 @@ class BoardGraphics {
     textStyle(BOLD);
     textAlign(LEFT, TOP);
     text(
-`Eval: ${game.ai.evaluation * game.ai.winSide}
+`Version: ${game.VERSION}
+Eval: ${game.ai.evaluation * game.ai.winSide}
 Depth: ${game.ai.maxDepth}
 Permutations: ${game.ai.permutations}
 `, 4, 4);
