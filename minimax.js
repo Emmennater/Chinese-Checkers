@@ -49,24 +49,64 @@ class Minimax {
     score = 16 - d;
     
     // Count neighbors
+    let teamates = 0;
     for (let neighbor of ball.hole.neighbors) {
       if (neighbor == null) continue;
       const hole = board.cols[neighbor.c][neighbor.r];
       if (hole.ball == null) continue;
+      if (hole.ball.team == ball.team) teamates++;
       score += 0.1;
     }
+
+    const WEIGHT = 0.75;
+    // if (this.maximizingTeam == 0)
+    if (teamates == 0) {
+      score -= d * WEIGHT;
+    }
     
-    return score * SIGNED_SIDE;
+    return {
+      score: score * SIGNED_SIDE,
+      dist: d
+    };
   }
   
-  getBoardScore(board) {
+  getBoardScore(board, prnt = false) {
     let totalScore = 0;
-    
+
     // Get score of all balls
-    for (let balls of board.teamBalls) {
-      for (let ball of balls) {
-        totalScore += this.getBallScore(board, ball);
+    for (let i=0; i<board.teamBalls.length; i++) {
+      const totalBalls = 10;
+      const SIGNED_SIDE = (i * 2 - 1); // only works with 2 teams
+      let distScore = 0;
+      let totalDist = 0;
+      let dists = [];
+
+      // Get score of each ball
+      for (let ball of board.teamBalls[i]) {
+        let data = this.getBallScore(board, ball);
+        totalScore += data.score;
+        totalDist += data.dist;
+        dists.push(data.dist);
       }
+      
+      // Calculate dist score
+      // const avgDist = totalDist / totalBalls;
+      // const WEIGHT = 0.75;
+      // let stragglers = 0;
+      // if (prnt) print("average dist: ", avgDist);
+      // for (let d of dists) {
+        // Scores greater than average receive higher scores
+        // Vise - versa
+        // Test for outliers
+        // if (d - avgDist > 4) {
+        //   distScore += d - avgDist;
+        //   stragglers++;
+        // }
+      // }
+      
+      // if (prnt) print(round(distScore * SIGNED_SIDE * 100) / 100);
+
+      // totalScore += (distScore * SIGNED_SIDE * WEIGHT) / (1 + stragglers);
     }
     
     return round(totalScore * 1000) / 1000;
